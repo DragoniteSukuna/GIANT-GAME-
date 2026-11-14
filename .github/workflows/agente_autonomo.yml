@@ -1,0 +1,41 @@
+name: Agente Creador de Juegos
+
+on:
+  schedule:
+    - cron: '0 */2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  desarrollar_juego:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar estado actual del juego
+        uses: actions/checkout@v4
+
+      - name: Configurar Git del robot
+        run: |
+          git config --global user.name "Agente IA"
+          git config --global user.email "agente@github.com"
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar agente autónomo
+        run: pip install aider-chat
+
+      - name: Trabajar en el juego sin supervisión
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          aider --model gemini/gemini-2.5-flash --yes-always --auto-commits \
+          --message "Lee el archivo ROADMAP.md. Elige la siguiente tarea sin marcar [ ], prográmala completa con calidad profesional en los archivos del juego (creando los archivos necesarios para que funcione en navegador con soporte para PC y móvil), asegúrate de que no haya errores de sintaxis y marca la tarea como [x] en ROADMAP.md." \
+          ROADMAP.md index.html game.js style.css
+
+      - name: Guardar progreso en GitHub
+        run: git push
+        
